@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="glass-card" style="max-width: 500px; margin: 0 auto; text-align: center;">
+    <h2>Confirm Deletion</h2>
+    <p style="margin-bottom: 2rem;">Are you absolutely sure you want to delete the job posting for <strong>"{{ object.title }}"</strong>? This action cannot be undone.</p>
+    <form method="post" style="display: flex; flex-direction: row; gap: 1rem; justify-content: center;">
+        {% csrf_token %}
+        <a href="{% url 'job-detail' object.pk %}" class="btn btn-secondary" style="flex: 1;">Cancel</a>
+        <button type="submit" class="btn" style="flex: 1; background: #ef476f;">Yes, Delete</button>
+    </form>
+</div>
+{% endblock %}

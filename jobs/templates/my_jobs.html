@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="glass-card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h2 style="margin: 0;">My Jobs</h2>
+        <a href="{% url 'job-create' %}" class="btn">Post a New Job</a>
+    </div>
+    
+    {% if my_jobs %}
+        <ul class="styled-list">
+        {% for job in my_jobs %}
+            <li>
+                <div>
+                    <h3 style="margin-bottom: 0.25rem;">{{ job.title }}</h3>
+                    <span style="color: var(--text-light); font-size: 0.9rem;">Posted on {{ job.date_posted|date:"M d, Y" }}</span>
+                </div>
+                <div class="actions">
+                    <a href="{% url 'job-detail' job.pk %}">View</a>
+                    <a href="{% url 'job-update' job.pk %}">Edit</a>
+                    <a href="{% url 'job-delete' job.pk %}" style="color: #ef476f;">Delete</a>
+                </div>
+            </li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <div class="empty-state">
+            <h3 style="margin: 0;">No jobs posted yet.</h3>
+            <p>Ready to find the perfect candidate? Post your first job today.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

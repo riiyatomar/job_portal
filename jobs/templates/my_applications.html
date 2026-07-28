@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="glass-card">
+    <h2 style="margin-bottom: 2rem;">My Applications</h2>
+    
+    {% if applications %}
+        <ul class="styled-list">
+        {% for app in applications %}
+            <li>
+                <div>
+                    <h3 style="margin-bottom: 0.25rem;">{{ app.job.title }}</h3>
+                    <span style="color: var(--text-light); font-size: 0.9rem;">at {{ app.job.company_name }}</span>
+                </div>
+                <div style="text-align: right;">
+                    <span style="display: block; color: var(--text-dark); margin-bottom: 0.25rem;">Applied on {{ app.date_applied|date:"M d, Y" }}</span>
+                    <div class="actions" style="justify-content: flex-end;">
+                        <a href="{% url 'job-detail' app.job.pk %}">View Job Listing</a>
+                    </div>
+                </div>
+            </li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <div class="empty-state">
+            <h3 style="margin: 0;">No applications yet.</h3>
+            <p>Start exploring opportunities and land your dream job!</p>
+            <a href="{% url 'job-list' %}" class="btn" style="margin-top: 1rem;">Browse Jobs</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

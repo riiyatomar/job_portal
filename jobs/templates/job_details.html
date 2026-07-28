@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ object.title }} at {{ object.company_name }} — Bloom Jobs{% endblock %}
+
+{% block content %}
+<div class="glass-card">
+    <div class="detail-header">
+        <h1 style="margin-bottom: 0.5rem;">{{ object.title }}</h1>
+        <div class="detail-meta">
+            <span class="meta-chip"><span class="icon">🏢</span> {{ object.company_name }}</span>
+            <span class="meta-chip"><span class="icon">📍</span> {{ object.location }}</span>
+            <span class="meta-chip salary-chip"><span class="icon">💰</span> ${{ object.salary }}</span>
+            <span class="meta-chip"><span class="icon">📅</span> {{ object.date_posted|date:"M d, Y" }}</span>
+        </div>
+    </div>
+    
+    <div style="margin-bottom: 3rem; white-space: pre-wrap; line-height: 1.8; color: var(--text-medium);">{{ object.description }}</div>
+
+    <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+        {% if user.is_authenticated %}
+            {% if object.posted_by != user %}
+                {% if not already_applied %}
+                    <form method="post" action="{% url 'apply-to-job' object.pk %}" style="margin: 0;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn" style="padding: 1rem 3rem; font-size: 1.1rem;">Apply Now</button>
+                    </form>
+                {% else %}
+                    <div class="btn btn-secondary" style="pointer-events: none; opacity: 0.7;">✓ Already Applied</div>
+                {% endif %}
+            {% endif %}
+            
+            {% if object.posted_by == user %}
+                <a href="{% url 'job-update' object.pk %}" class="btn btn-secondary">Edit</a>
+                <a href="{% url 'job-delete' object.pk %}" class="btn btn-secondary" style="color: #e74c3c !important; border-color: #e74c3c;">Delete</a>
+            {% endif %}
+        {% else %}
+            <p><a href="{% url 'login' %}" style="color: var(--primary-color); font-weight: 600;">Log in</a> to apply for this position.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

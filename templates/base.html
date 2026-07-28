@@ -1,0 +1,81 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Bloom Jobs — Find your dream job or post opportunities. A modern job portal for employers and job seekers.">
+    <title>{% block title %}Bloom Jobs — Job Portal{% endblock %}</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <!-- Animated Background Blobs -->
+    <div class="bg-blobs" aria-hidden="true">
+        <div class="blob"></div>
+        <div class="blob"></div>
+        <div class="blob"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <a href="{% url 'job-list' %}" class="nav-brand">✨ Bloom Jobs</a>
+
+        <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+            <span></span><span></span><span></span>
+        </button>
+
+        <div class="nav-links" id="navLinks">
+            {% if user.is_authenticated %}
+                <span style="color: var(--primary-color); font-weight: 600;">Hi, {{ user.username }}!</span>
+                <a href="{% url 'job-create' %}">Post a Job</a>
+                <a href="{% url 'my-jobs' %}">My Jobs</a>
+                <a href="{% url 'my-applications' %}">My Applications</a>
+                <form action="{% url 'logout' %}" method="post" style="display:inline; margin: 0;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-secondary" style="padding: 0.4rem 1rem;">Logout</button>
+                </form>
+            {% else %}
+                <a href="{% url 'login' %}">Login</a>
+                <a href="{% url 'signup' %}" class="btn" style="padding: 0.4rem 1.2rem;">Sign Up</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% if messages %}
+    <div class="messages-container">
+        {% for message in messages %}
+            <div class="toast-msg {{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="container fade-in">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <p>© 2026 <a href="{% url 'job-list' %}">Bloom Jobs</a> — Built with Django. Made with 💖</p>
+    </footer>
+
+    <!-- Mobile Nav Toggle Script -->
+    <script>
+        const toggle = document.getElementById('navToggle');
+        const links = document.getElementById('navLinks');
+        if (toggle && links) {
+            toggle.addEventListener('click', () => links.classList.toggle('open'));
+            links.querySelectorAll('a, button[type="submit"]').forEach(el => {
+                el.addEventListener('click', () => links.classList.remove('open'));
+            });
+        }
+    </script>
+</body>
+</html>
