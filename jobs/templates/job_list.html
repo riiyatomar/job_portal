@@ -3,31 +3,257 @@
 {% block title %}Browse Jobs — Bloom Jobs{% endblock %}
 
 {% block content %}
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
-    <h1 style="margin-bottom: 0;">Latest Opportunities</h1>
-    {% if user.is_authenticated %}
-        <a href="{% url 'job-create' %}" class="btn">+ Post a Job</a>
-    {% endif %}
+<!-- Search Header Section -->
+<div style="background: var(--glass-bg); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 2rem; border-radius: 12px; border: 1px solid var(--glass-border); margin-bottom: 2rem;">
+    <h1 style="margin-top: 0; margin-bottom: 1rem; color: var(--primary-dark); font-size: 2rem;">Find Your Dream Job</h1>
+    
+    <form method="get" action="{% url 'job-list' %}" style="display: flex; gap: 1rem; width: 100%; align-items: center; flex-wrap: wrap;">
+        <!-- Preserve other GET params if needed, or rely on sidebar for complex filters -->
+        <input type="text" name="q" placeholder="Job title, keywords, or company..." value="{{ filters.q }}" class="form-group" style="flex: 1; min-width: 250px; margin-bottom: 0; font-size: 1.1rem; padding: 1rem; border-radius: 8px;">
+        <input type="text" name="location" placeholder="City, state, or remote..." value="{{ filters.location }}" class="form-group" style="flex: 0.5; min-width: 200px; margin-bottom: 0; font-size: 1.1rem; padding: 1rem; border-radius: 8px;">
+        <button type="submit" class="btn" style="padding: 1rem 2rem; font-size: 1.1rem; border-radius: 8px; flex-shrink: 0;">Search Jobs</button>
+    </form>
 </div>
 
-{% if all_jobs %}
-<div class="job-grid">
-    {% for job in all_jobs %}
-        <div class="glass-card job-card">
-            <span class="company">{{ job.company_name }}</span>
-            <h3>{{ job.title }}</h3>
-            <div class="location">📍 {{ job.location }}</div>
-            <div class="salary-badge">💰 ${{ job.salary }}</div>
-            <div class="card-footer">
-                <a href="{% url 'job-detail' job.pk %}" class="btn" style="flex: 1; text-align: center;">View Details</a>
-            </div>
+<div style="display: grid; grid-template-columns: 280px 1fr; gap: 2rem; align-items: start;">
+    
+    <!-- Mobile Filter Toggle -->
+    <div class="mobile-filter-toggle" style="display: none; width: 100%; margin-bottom: 1rem;">
+        <button class="btn btn-secondary" style="width: 100%;" onclick="document.getElementById('filter-sidebar').classList.toggle('show')">
+            Toggle Filters
+        </button>
+    </div>
+
+    <!-- Sidebar Filters -->
+    <aside id="filter-sidebar" class="glass-card" style="position: sticky; top: 100px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h3 style="margin: 0; font-size: 1.2rem;">Filters</h3>
+            <a href="{% url 'job-list' %}" style="color: var(--accent-blue); text-decoration: none; font-size: 0.9rem; font-weight: 500;">Clear All</a>
         </div>
-    {% endfor %}
+        
+        <form method="get" action="{% url 'job-list' %}">
+            <!-- Hidden inputs to retain search values -->
+            <input type="hidden" name="q" value="{{ filters.q }}">
+            <input type="hidden" name="location" value="{{ filters.location }}">
+
+            <!-- Sort By -->
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-dark);">Sort By</label>
+                <select name="sort_by" class="form-group" style="margin-bottom: 0;" onchange="this.form.submit()">
+                    <option value="newest" {% if filters.sort_by == 'newest' %}selected{% endif %}>Newest</option>
+                    <option value="oldest" {% if filters.sort_by == 'oldest' %}selected{% endif %}>Oldest</option>
+                    <option value="highest_salary" {% if filters.sort_by == 'highest_salary' %}selected{% endif %}>Highest Salary</option>
+                    <option value="lowest_salary" {% if filters.sort_by == 'lowest_salary' %}selected{% endif %}>Lowest Salary</option>
+                    <option value="most_applications" {% if filters.sort_by == 'most_applications' %}selected{% endif %}>Most Applications</option>
+                    <option value="company_name" {% if filters.sort_by == 'company_name' %}selected{% endif %}>Company Name</option>
+                </select>
+            </div>
+
+            <!-- Date Posted -->
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-dark);">Date Posted</label>
+                <select name="date_posted" class="form-group" style="margin-bottom: 0;" onchange="this.form.submit()">
+                    <option value="" {% if filters.date_posted == '' %}selected{% endif %}>Any Time</option>
+                    <option value="today" {% if filters.date_posted == 'today' %}selected{% endif %}>Past 24 Hours</option>
+                    <option value="7days" {% if filters.date_posted == '7days' %}selected{% endif %}>Past 7 Days</option>
+                    <option value="30days" {% if filters.date_posted == '30days' %}selected{% endif %}>Past 30 Days</option>
+                </select>
+            </div>
+
+            <!-- Job Type -->
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-dark);">Job Type</label>
+                {% for value, label in job_type_choices %}
+                    <label style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem; font-size: 0.95rem; cursor: pointer;">
+                        <input type="radio" name="job_type" value="{{ value }}" {% if filters.job_type == value %}checked{% endif %} onchange="this.form.submit()">
+                        {{ label }}
+                    </label>
+                {% endfor %}
+            </div>
+            
+            <!-- Work Mode -->
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-dark);">Work Mode</label>
+                {% for value, label in work_mode_choices %}
+                    <label style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem; font-size: 0.95rem; cursor: pointer;">
+                        <input type="radio" name="work_mode" value="{{ value }}" {% if filters.work_mode == value %}checked{% endif %} onchange="this.form.submit()">
+                        {{ label }}
+                    </label>
+                {% endfor %}
+            </div>
+
+            <!-- Experience Level -->
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-dark);">Experience Level</label>
+                <select name="experience_level" class="form-group" style="margin-bottom: 0;" onchange="this.form.submit()">
+                    <option value="" {% if filters.experience_level == '' %}selected{% endif %}>All Levels</option>
+                    {% for value, label in experience_level_choices %}
+                        <option value="{{ value }}" {% if filters.experience_level == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- Salary Range -->
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-dark);">Salary Range ($)</label>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <input type="number" name="min_salary" placeholder="Min" value="{{ filters.min_salary }}" class="form-group" style="margin-bottom: 0; padding: 0.5rem;">
+                    <span>-</span>
+                    <input type="number" name="max_salary" placeholder="Max" value="{{ filters.max_salary }}" class="form-group" style="margin-bottom: 0; padding: 0.5rem;">
+                </div>
+            </div>
+
+            <!-- Industry -->
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-dark);">Industry</label>
+                <input type="text" name="industry" placeholder="e.g. Technology" value="{{ filters.industry }}" class="form-group" style="margin-bottom: 0;">
+            </div>
+
+            <!-- Apply Filters Button -->
+            <button type="submit" class="btn" style="width: 100%;">Apply Filters</button>
+        </form>
+    </aside>
+
+    <!-- Main Results Area -->
+    <main>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <p style="color: var(--text-medium); margin: 0;">
+                Showing <strong>{{ page_obj.start_index }}</strong> - <strong>{{ page_obj.end_index }}</strong> of <strong>{{ paginator.count }}</strong> jobs
+            </p>
+            {% if user.is_authenticated and user.role == 'employer' %}
+                <a href="{% url 'job-create' %}" class="btn" style="padding: 0.5rem 1rem;">+ Post a Job</a>
+            {% endif %}
+        </div>
+
+        {% if all_jobs %}
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                {% for job in all_jobs %}
+                    <div class="glass-card" style="padding: 1.5rem; display: flex; gap: 1.5rem; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='var(--shadow-md)';" onmouseout="this.style.transform='none'; this.style.boxShadow='var(--shadow-sm)';">
+                        <!-- Company Logo -->
+                        <div style="flex-shrink: 0;">
+                            {% if job.company %}
+                                {% if job.company.logo %}
+                                    <a href="{% url 'company-detail' job.company.slug %}"><img src="{{ job.company.logo.url }}" alt="{{ job.company.name }} logo" style="width: 60px; height: 60px; border-radius: 8px; object-fit: cover; border: 1px solid var(--glass-border);"></a>
+                                {% else %}
+                                    <a href="{% url 'company-detail' job.company.slug %}" style="text-decoration: none;">
+                                        <div style="width: 60px; height: 60px; border-radius: 8px; background: linear-gradient(135deg, var(--primary-light), var(--accent-blue)); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.5rem;">
+                                            {{ job.company.name|make_list|first|upper }}
+                                        </div>
+                                    </a>
+                                {% endif %}
+                            {% else %}
+                                {% if job.company_logo %}
+                                    <img src="{{ job.company_logo.url }}" alt="{{ job.company_name }} logo" style="width: 60px; height: 60px; border-radius: 8px; object-fit: cover; border: 1px solid var(--glass-border);">
+                                {% else %}
+                                    <div style="width: 60px; height: 60px; border-radius: 8px; background: linear-gradient(135deg, var(--primary-light), var(--accent-blue)); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.5rem;">
+                                        {{ job.company_name|make_list|first|upper }}
+                                    </div>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+
+                        <!-- Job Info -->
+                        <div style="flex: 1;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                <div>
+                                    <h3 style="margin: 0 0 0.25rem 0; font-size: 1.25rem;">
+                                        <a href="{% url 'job-detail' job.pk %}" style="color: var(--text-dark); text-decoration: none;">{{ job.title }}</a>
+                                    </h3>
+                                    <div style="color: var(--primary-color); font-weight: 500; font-size: 1rem; margin-bottom: 0.5rem;">
+                                        {% if job.company %}
+                                            <a href="{% url 'company-detail' job.company.slug %}" style="color: inherit; text-decoration: none;">{{ job.company.name }}</a>
+                                        {% else %}
+                                            {{ job.company_name }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                    <span class="badge" style="background: var(--glass-bg); color: var(--accent-mint); border: 1px solid var(--glass-border);">Match 85%</span> <!-- Match Placeholder -->
+                                    <button class="btn btn-secondary" style="padding: 0.4rem; border-radius: 50%; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;" title="Save Job" onclick="alert('Save job functionality placeholder')">
+                                        🔖
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Badges -->
+                            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
+                                <span class="badge" style="background: var(--glass-bg); color: var(--text-medium); font-weight: normal; border: 1px solid var(--glass-border);">📍 {{ job.location }}</span>
+                                <span class="badge" style="background: var(--glass-bg); color: var(--text-medium); font-weight: normal; border: 1px solid var(--glass-border);">💼 {{ job.get_job_type_display }}</span>
+                                <span class="badge" style="background: var(--glass-bg); color: var(--text-medium); font-weight: normal; border: 1px solid var(--glass-border);">🏠 {{ job.get_work_mode_display }}</span>
+                                <span class="badge" style="background: var(--glass-bg); color: var(--text-medium); font-weight: normal; border: 1px solid var(--glass-border);">📈 {{ job.get_experience_level_display }}</span>
+                                <span class="badge" style="background: #ecfdf5; color: #059669; font-weight: 600; border: 1px solid #a7f3d0;">💰 ${{ job.salary }}</span>
+                            </div>
+
+                            <p style="margin: 0 0 1rem 0; color: var(--text-light); font-size: 0.95rem; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                {{ job.description|striptags }}
+                            </p>
+
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div style="font-size: 0.85rem; color: var(--text-light);">
+                                    Posted {{ job.date_posted|timesince }} ago
+                                    {% if job.applications_count %} &bull; <span style="color: var(--accent-blue);">{{ job.applications_count }} applicants</span>{% endif %}
+                                </div>
+                                <a href="{% url 'job-detail' job.pk %}" class="btn" style="padding: 0.5rem 1.5rem; font-size: 0.9rem;">Quick Apply</a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+                <div style="margin-top: 3rem; display: flex; justify-content: center; gap: 0.5rem;">
+                    {% if page_obj.has_previous %}
+                        <a href="?page=1{% if query_string %}&{{ query_string }}{% endif %}" class="btn btn-secondary">&laquo; First</a>
+                        <a href="?page={{ page_obj.previous_page_number }}{% if query_string %}&{{ query_string }}{% endif %}" class="btn btn-secondary">Previous</a>
+                    {% endif %}
+                    
+                    <div style="padding: 0.5rem 1rem; background: var(--glass-bg); border-radius: 8px; font-weight: bold; color: var(--primary-color);">
+                        {{ page_obj.number }} of {{ paginator.num_pages }}
+                    </div>
+
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}{% if query_string %}&{{ query_string }}{% endif %}" class="btn btn-secondary">Next</a>
+                        <a href="?page={{ paginator.num_pages }}{% if query_string %}&{{ query_string }}{% endif %}" class="btn btn-secondary">Last &raquo;</a>
+                    {% endif %}
+                </div>
+            {% endif %}
+
+        {% else %}
+            <!-- Empty State -->
+            <div class="glass-card empty-state" style="padding: 4rem 2rem; text-align: center; border: 2px dashed var(--glass-border);">
+                <div style="font-size: 4rem; margin-bottom: 1rem;">🔍</div>
+                <h2 style="margin: 0 0 1rem 0; color: var(--text-dark);">No jobs found matching your criteria</h2>
+                <p style="color: var(--text-medium); margin-bottom: 2rem; max-width: 500px; margin-left: auto; margin-right: auto;">
+                    We couldn't find any roles that match your search. Try adjusting your filters, broadening your search terms, or exploring different categories.
+                </p>
+                <div style="display: flex; gap: 1rem; justify-content: center;">
+                    <a href="{% url 'job-list' %}" class="btn btn-secondary">Clear All Filters</a>
+                    {% if user.is_authenticated and user.role == 'employer' %}
+                        <a href="{% url 'job-create' %}" class="btn">Post a New Job</a>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    </main>
 </div>
-{% else %}
-<div class="glass-card empty-state">
-    <h3 style="margin: 0;">No jobs found.</h3>
-    <p>Be the first to post a new opportunity!</p>
-</div>
-{% endif %}
+
+<style>
+    /* Add simple responsive styles for the layout */
+    @media (max-width: 768px) {
+        div[style*="grid-template-columns"] {
+            grid-template-columns: 1fr !important;
+        }
+        #filter-sidebar {
+            display: none;
+            position: static !important;
+        }
+        #filter-sidebar.show {
+            display: block;
+        }
+        .mobile-filter-toggle {
+            display: block !important;
+        }
+    }
+</style>
 {% endblock %}

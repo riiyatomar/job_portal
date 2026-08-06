@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ profile.user.username }}'s Profile — Bloom Jobs{% endblock %}
+
+{% block content %}
+<div class="glass-card" style="padding: 0; overflow: hidden; margin-bottom: 2rem;">
+    <!-- Cover Image -->
+    <div style="height: 200px; background-color: var(--primary-light); background-image: url('{% if profile.cover_image %}{{ profile.cover_image.url }}{% endif %}'); background-size: cover; background-position: center; position: relative;">
+        <!-- Profile Picture -->
+        <div style="position: absolute; bottom: -50px; left: 2rem; width: 120px; height: 120px; border-radius: 50%; border: 4px solid #fff; background-color: #f1f1f1; background-image: url('{% if profile.profile_picture %}{{ profile.profile_picture.url }}{% endif %}'); background-size: cover; background-position: center;"></div>
+    </div>
+    
+    <div style="padding: 4rem 2rem 2rem 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h1 style="margin: 0; display: flex; align-items: center; gap: 1rem;">
+                    {{ profile.user.username }}
+                    {% if user.is_authenticated and user == profile.user %}
+                        <a href="{% url 'profile-edit' %}" class="btn btn-secondary" style="font-size: 0.9rem; padding: 0.4rem 0.8rem;">Edit Profile</a>
+                    {% endif %}
+                </h1>
+                <p style="font-size: 1.2rem; color: var(--text-medium); margin-top: 0.5rem; margin-bottom: 0;">{{ profile.headline|default:"No headline provided" }}</p>
+                <div style="display: flex; gap: 1rem; margin-top: 0.5rem; flex-wrap: wrap;">
+                    {% if profile.location %}<span style="color: var(--text-light);">📍 {{ profile.location }}</span>{% endif %}
+                    {% if profile.phone_number %}<span style="color: var(--text-light);">📞 {{ profile.phone_number }}</span>{% endif %}
+                </div>
+            </div>
+            
+            {% if user.is_authenticated and user == profile.user %}
+            <div style="background-color: var(--primary-light); padding: 1rem; border-radius: 8px; text-align: center; min-width: 150px;">
+                <h3 style="margin: 0; color: var(--primary-dark);">Profile Completion</h3>
+                <div style="font-size: 2rem; font-weight: bold; color: var(--primary-color);">{{ completion_percentage }}%</div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div style="margin-top: 1.5rem; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+            {% if profile.github_url %}<a href="{{ profile.github_url }}" target="_blank" class="btn btn-secondary" style="padding: 0.4rem 1rem;">GitHub</a>{% endif %}
+            {% if profile.linkedin_url %}<a href="{{ profile.linkedin_url }}" target="_blank" class="btn btn-secondary" style="padding: 0.4rem 1rem;">LinkedIn</a>{% endif %}
+            {% if profile.portfolio_url %}<a href="{{ profile.portfolio_url }}" target="_blank" class="btn btn-secondary" style="padding: 0.4rem 1rem;">Portfolio</a>{% endif %}
+            {% if profile.resume %}<a href="{{ profile.resume.url }}" target="_blank" class="btn" style="padding: 0.4rem 1rem;">View Resume</a>{% endif %}
+            {% if user.is_authenticated and user == profile.user %}
+                <a href="{% url 'resume-manage' %}" class="btn" style="padding: 0.4rem 1rem; background-color: var(--primary-dark);">Manage Resume</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="glass-card" style="margin-bottom: 2rem;">
+    <h2>About Me</h2>
+    {% if profile.about %}
+        <div style="line-height: 1.6; color: var(--text-medium);">{{ profile.about|linebreaks }}</div>
+    {% else %}
+        <p style="color: var(--text-light); font-style: italic;">No about section provided.</p>
+    {% endif %}
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-bottom: 2rem;">
+    <div class="glass-card">
+        <h3>Skills</h3>
+        {% if profile.skills %}
+            <div style="line-height: 1.6; color: var(--text-medium);">{{ profile.skills|linebreaks }}</div>
+        {% else %}
+            <p style="color: var(--text-light); font-style: italic;">No skills listed.</p>
+        {% endif %}
+    </div>
+
+    <div class="glass-card">
+        <h3>Languages</h3>
+        {% if profile.languages %}
+            <div style="line-height: 1.6; color: var(--text-medium);">{{ profile.languages|linebreaks }}</div>
+        {% else %}
+            <p style="color: var(--text-light); font-style: italic;">No languages listed.</p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="glass-card" style="margin-bottom: 2rem;">
+    <h2>Experience</h2>
+    {% if profile.experience %}
+        <div style="line-height: 1.6; color: var(--text-medium);">{{ profile.experience|linebreaks }}</div>
+    {% else %}
+        <p style="color: var(--text-light); font-style: italic;">No experience listed.</p>
+    {% endif %}
+</div>
+
+<div class="glass-card" style="margin-bottom: 2rem;">
+    <h2>Education</h2>
+    {% if profile.education %}
+        <div style="line-height: 1.6; color: var(--text-medium);">{{ profile.education|linebreaks }}</div>
+    {% else %}
+        <p style="color: var(--text-light); font-style: italic;">No education listed.</p>
+    {% endif %}
+</div>
+
+<div class="glass-card" style="margin-bottom: 2rem;">
+    <h2>Projects</h2>
+    {% if profile.projects %}
+        <div style="line-height: 1.6; color: var(--text-medium);">{{ profile.projects|linebreaks }}</div>
+    {% else %}
+        <p style="color: var(--text-light); font-style: italic;">No projects listed.</p>
+    {% endif %}
+</div>
+
+<div class="glass-card" style="margin-bottom: 2rem;">
+    <h2>Certifications</h2>
+    {% if profile.certifications %}
+        <div style="line-height: 1.6; color: var(--text-medium);">{{ profile.certifications|linebreaks }}</div>
+    {% else %}
+        <p style="color: var(--text-light); font-style: italic;">No certifications listed.</p>
+    {% endif %}
+</div>
+
+{% endblock %}

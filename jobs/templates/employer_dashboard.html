@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Employer Dashboard — Bloom Jobs{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <h1 style="margin: 0;">Employer Dashboard</h1>
+    <div style="display: flex; gap: 1rem;">
+        {% if company %}
+            <a href="{% url 'company-detail' company.slug %}" class="btn btn-secondary">View Company Profile</a>
+            <a href="{% url 'company-update' company.slug %}" class="btn btn-secondary">Edit Company Profile</a>
+        {% else %}
+            <a href="{% url 'company-create' %}" class="btn btn-secondary" style="background: var(--primary-light); color: var(--primary-dark);">Create Company Profile</a>
+        {% endif %}
+        <a href="{% url 'job-create' %}" class="btn">Post a New Job</a>
+    </div>
+</div>
+
+<!-- Stats Section -->
+<div class="dashboard-stats">
+    <div class="stat-card">
+        <div style="color: var(--text-light); font-weight: 500; text-transform: uppercase; font-size: 0.9rem;">Total Jobs Posted</div>
+        <div class="stat-value">{{ total_jobs }}</div>
+    </div>
+    <div class="stat-card">
+        <div style="color: var(--text-light); font-weight: 500; text-transform: uppercase; font-size: 0.9rem;">Active / Closed</div>
+        <div class="stat-value" style="color: var(--text-dark);">{{ active_jobs }} / <span style="color: var(--text-light);">{{ closed_jobs }}</span></div>
+    </div>
+    <div class="stat-card">
+        <div style="color: var(--text-light); font-weight: 500; text-transform: uppercase; font-size: 0.9rem;">Total Applications</div>
+        <div class="stat-value" style="color: var(--accent-blue);">{{ total_applications }}</div>
+    </div>
+    <div class="stat-card">
+        <div style="color: var(--text-light); font-weight: 500; text-transform: uppercase; font-size: 0.9rem;">Apps Today</div>
+        <div class="stat-value" style="color: var(--primary-color);">{{ applications_today }}</div>
+    </div>
+    <div class="stat-card">
+        <div style="color: var(--text-light); font-weight: 500; text-transform: uppercase; font-size: 0.9rem;">Apps This Week</div>
+        <div class="stat-value" style="color: var(--accent-lavender);">{{ applications_this_week }}</div>
+    </div>
+    <div class="stat-card">
+        <div style="color: var(--text-light); font-weight: 500; text-transform: uppercase; font-size: 0.9rem;">Total Views</div>
+        <div class="stat-value" style="color: var(--accent-mint);">{{ total_views }}</div>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
+    <!-- Jobs Posted Section -->
+    <div class="glass-card">
+        <h2 style="margin-top: 0;">My Jobs</h2>
+        {% if my_jobs %}
+            <ul class="styled-list">
+            {% for job in my_jobs %}
+                <li>
+                    <div>
+                        <h3 style="margin-bottom: 0.25rem;">
+                            {{ job.title }} 
+                            {% if job.is_closed %}
+                                <span class="badge" style="background: #e2e8f0; color: #475569; margin-left: 0.5rem; font-size: 0.7rem;">Closed</span>
+                            {% else %}
+                                <span class="badge" style="background: #dcfce7; color: #166534; margin-left: 0.5rem; font-size: 0.7rem;">Active</span>
+                            {% endif %}
+                        </h3>
+                        <span style="color: var(--text-light); font-size: 0.9rem;">Posted on {{ job.date_posted|date:"M d, Y" }} &bull; {{ job.applications_count }} Applications</span>
+                    </div>
+                    <div class="actions" style="flex-wrap: wrap;">
+                        <a href="{% url 'job-applicants' job.pk %}" class="btn btn-secondary" style="background: var(--primary-light);">View Applicants</a>
+                        <a href="{% url 'job-detail' job.pk %}" class="btn btn-secondary">View</a>
+                        <a href="{% url 'job-update' job.pk %}" class="btn btn-secondary">Edit</a>
+                        {% if job.is_closed %}
+                            <a href="{% url 'job-toggle-status' job.pk 'reopen' %}" class="btn btn-secondary" style="color: var(--accent-blue) !important; border-color: var(--accent-blue);">Reopen</a>
+                        {% else %}
+                            <a href="{% url 'job-toggle-status' job.pk 'close' %}" class="btn btn-secondary" style="color: #f59e0b !important; border-color: #f59e0b;">Close</a>
+                        {% endif %}
+                        <a href="{% url 'job-delete' job.pk %}" class="btn btn-secondary" style="color: #ef476f !important; border-color: #ef476f;">Delete</a>
+                    </div>
+                </li>
+            {% endfor %}
+            </ul>
+        {% else %}
+            <div class="empty-state">
+                <h3 style="margin: 0;">No jobs posted yet.</h3>
+                <p>Ready to find the perfect candidate? Post your first job today.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Recent Applicants Section -->
+    <div class="glass-card">
+        <h2 style="margin-top: 0;">Applications by Status</h2>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 2rem;">
+            {% for status, count in applications_by_status.items %}
+                <div style="background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 8px; padding: 0.5rem 1rem; text-align: center; flex: 1; min-width: 100px;">
+                    <div style="font-size: 1.25rem; font-weight: bold; color: var(--primary-dark);">{{ count }}</div>
+                    <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-medium);">{{ status }}</div>
+                </div>
+            {% empty %}
+                <p style="color: var(--text-light); font-style: italic;">No applications yet.</p>
+            {% endfor %}
+        </div>
+
+        <h2 style="margin-top: 0;">Recent Status Changes</h2>
+        {% if recent_status_changes %}
+            <ul class="styled-list" style="gap: 1rem;">
+            {% for history in recent_status_changes %}
+                <li style="padding: 1rem; flex-direction: column; align-items: flex-start; gap: 0.5rem;">
+                    <div style="width: 100%; display: flex; justify-content: space-between; align-items: flex-start;">
+                        <strong>{{ history.application.applicant.username }}</strong>
+                        {% if history.status == 'Applied' %}<span class="badge badge-applied">{{ history.status }}</span>
+                        {% elif history.status == 'Under Review' %}<span class="badge badge-review">{{ history.status }}</span>
+                        {% elif history.status == 'Shortlisted' %}<span class="badge badge-shortlisted">{{ history.status }}</span>
+                        {% elif history.status == 'Interview Scheduled' %}<span class="badge badge-interview">{{ history.status }}</span>
+                        {% elif history.status == 'Technical Round' %}<span class="badge badge-technical">{{ history.status }}</span>
+                        {% elif history.status == 'HR Round' %}<span class="badge badge-hr">{{ history.status }}</span>
+                        {% elif history.status == 'Offer Extended' %}<span class="badge badge-offer">{{ history.status }}</span>
+                        {% elif history.status == 'Hired' %}<span class="badge badge-hired">{{ history.status }}</span>
+                        {% elif history.status == 'Rejected' %}<span class="badge badge-rejected">{{ history.status }}</span>
+                        {% elif history.status == 'Withdrawn' %}<span class="badge badge-withdrawn">{{ history.status }}</span>
+                        {% else %}<span class="badge">{{ history.status }}</span>
+                        {% endif %}
+                    </div>
+                    <div style="color: var(--text-light); font-size: 0.9rem;">
+                        Applied for <strong>{{ history.application.job.title }}</strong>
+                    </div>
+                    {% if history.note %}
+                    <div style="background: var(--glass-bg); padding: 0.5rem; border-radius: 4px; font-size: 0.85rem; color: var(--text-medium); margin-top: 0.5rem; width: 100%;">
+                        <em>"{{ history.note }}"</em>
+                    </div>
+                    {% endif %}
+                    <div style="color: var(--text-light); font-size: 0.8rem; margin-top: 0.25rem;">
+                        {{ history.timestamp|timesince }} ago
+                    </div>
+                    <div style="margin-top: 0.5rem; width: 100%; text-align: right;">
+                        <a href="{% url 'applicant-profile' history.application.id %}" style="font-size: 0.9rem; color: var(--primary-color); text-decoration: none; font-weight: 500;">Review Application &rarr;</a>
+                    </div>
+                </li>
+            {% endfor %}
+            </ul>
+        {% else %}
+            <p style="color: var(--text-light); font-style: italic;">No recent status changes.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

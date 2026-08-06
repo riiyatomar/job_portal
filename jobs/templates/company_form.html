@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {% if object %}Edit Company Profile{% else %}Create Company Profile{% endif %} — Bloom Jobs
+{% endblock %}
+
+{% block content %}
+<div class="glass-card" style="max-width: 800px; margin: 0 auto; padding: 2rem;">
+    <h2>{% if object %}Edit Company Profile{% else %}Create Company Profile{% endif %}</h2>
+    <p style="color: var(--text-medium); margin-bottom: 2rem;">
+        {% if object %}
+            Update your company's information to attract the best talent.
+        {% else %}
+            Set up your company profile to start posting jobs and building your brand.
+        {% endif %}
+    </p>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+            <button type="submit" class="btn" style="flex: 1;">Save Profile</button>
+            <a href="{% url 'employer-dashboard' %}" class="btn btn-secondary" style="flex: 1; text-align: center;">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

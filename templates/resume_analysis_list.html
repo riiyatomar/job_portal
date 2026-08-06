@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}AI Resume Analysis History{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>AI Resume Analysis History</h2>
+        <a href="{% url 'resume-manage' %}" class="btn btn-outline-primary">Manage Resume</a>
+    </div>
+
+    {% if analyses %}
+        <div class="row">
+            {% for analysis in analyses %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <h5 class="card-title text-primary mb-3">Score: {{ analysis.resume_score }}/100</h5>
+                            <span class="text-muted small">{{ analysis.timestamp|date:"M d, Y" }}</span>
+                        </div>
+                        <p class="card-text text-muted mb-2"><strong>ATS Score:</strong> {{ analysis.ats_score }}</p>
+                        {% if analysis.job %}
+                            <p class="card-text text-muted mb-2"><strong>Job Match:</strong> {{ analysis.match_percentage }}% ({{ analysis.job.title }})</p>
+                        {% endif %}
+                        <p class="card-text small text-truncate" style="max-height: 40px;">
+                            {{ analysis.summary_review }}
+                        </p>
+                    </div>
+                    <div class="card-footer bg-transparent border-0 pt-0">
+                        <a href="{% url 'resume-analysis-detail' analysis.pk %}" class="btn btn-primary w-100">View Full Analysis</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center py-5 bg-light rounded shadow-sm">
+            <h3 class="text-muted mb-3">No AI Analyses Yet</h3>
+            <p>Upload a resume and click "Analyze Resume" to get actionable AI-driven feedback.</p>
+            <a href="{% url 'resume-manage' %}" class="btn btn-primary mt-2">Go to Resume Manager</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -8,16 +8,60 @@
         <ul class="styled-list">
         {% for app in applications %}
             <li>
-                <div>
-                    <h3 style="margin-bottom: 0.25rem;">{{ app.job.title }}</h3>
-                    <span style="color: var(--text-light); font-size: 0.9rem;">at {{ app.job.company_name }}</span>
-                </div>
-                <div style="text-align: right;">
-                    <span style="display: block; color: var(--text-dark); margin-bottom: 0.25rem;">Applied on {{ app.date_applied|date:"M d, Y" }}</span>
-                    <div class="actions" style="justify-content: flex-end;">
-                        <a href="{% url 'job-detail' app.job.pk %}">View Job Listing</a>
+                    <div style="width: 100%; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+                        <div>
+                            <h2 style="margin: 0; margin-bottom: 0.25rem;">
+                                <a href="{% url 'job-detail' app.job.id %}" style="text-decoration: none; color: var(--text-dark);">{{ app.job.title }}</a>
+                            </h2>
+                            <span style="color: var(--text-light); font-size: 0.9rem;">at {{ app.job.company_name }}</span>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; flex-direction: column; align-items: flex-end;">
+                            <div>
+                                {% if app.status == 'Applied' %}<span class="badge badge-applied">{{ app.status }}</span>
+                                {% elif app.status == 'Under Review' %}<span class="badge badge-review">{{ app.status }}</span>
+                                {% elif app.status == 'Shortlisted' %}<span class="badge badge-shortlisted">{{ app.status }}</span>
+                                {% elif app.status == 'Interview Scheduled' %}<span class="badge badge-interview">{{ app.status }}</span>
+                                {% elif app.status == 'Technical Round' %}<span class="badge badge-technical">{{ app.status }}</span>
+                                {% elif app.status == 'HR Round' %}<span class="badge badge-hr">{{ app.status }}</span>
+                                {% elif app.status == 'Offer Extended' %}<span class="badge badge-offer">{{ app.status }}</span>
+                                {% elif app.status == 'Hired' %}<span class="badge badge-hired">{{ app.status }}</span>
+                                {% elif app.status == 'Rejected' %}<span class="badge badge-rejected">{{ app.status }}</span>
+                                {% elif app.status == 'Withdrawn' %}<span class="badge badge-withdrawn">{{ app.status }}</span>
+                                {% else %}<span class="badge">{{ app.status }}</span>
+                                {% endif %}
+                            </div>
+                            <span style="font-size: 0.8rem; color: var(--text-light);">Applied: {{ app.date_applied|date:"M d, Y" }}</span>
+                        </div>
                     </div>
-                </div>
+
+                    <!-- Timeline -->
+                    <div style="width: 100%; margin-top: 1rem; border-top: 1px solid var(--glass-border); padding-top: 1rem;">
+                        <h4 style="margin-top: 0; margin-bottom: 0.5rem; color: var(--text-medium); font-size: 0.9rem;">Status Timeline</h4>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            {% for history in app.status_history.all %}
+                                <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+                                    <div>
+                                        <strong>{{ history.status }}</strong>
+                                        {% if history.note %}
+                                            <div style="color: var(--text-medium); font-style: italic; margin-top: 0.25rem;">"{{ history.note }}"</div>
+                                        {% endif %}
+                                    </div>
+                                    <div style="color: var(--text-light); text-align: right;">
+                                        {{ history.timestamp|date:"M d, Y h:i A" }}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    {% if app.status not in 'Hired,Rejected,Withdrawn' %}
+                    <div style="width: 100%; text-align: right; margin-top: 1rem;">
+                        <form method="post" action="{% url 'withdraw-application' app.id %}" onsubmit="return confirm('Are you sure you want to withdraw your application? This action cannot be undone.');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-secondary" style="color: #ef476f !important; border-color: #ef476f; padding: 0.4rem 0.8rem; font-size: 0.85rem;">Withdraw Application</button>
+                        </form>
+                    </div>
+                    {% endif %}
             </li>
         {% endfor %}
         </ul>

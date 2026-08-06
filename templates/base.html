@@ -32,9 +32,13 @@
         <div class="nav-links" id="navLinks">
             {% if user.is_authenticated %}
                 <span style="color: var(--primary-color); font-weight: 600;">Hi, {{ user.username }}!</span>
-                <a href="{% url 'job-create' %}">Post a Job</a>
-                <a href="{% url 'my-jobs' %}">My Jobs</a>
-                <a href="{% url 'my-applications' %}">My Applications</a>
+                <a href="{% url 'my-profile' %}">Profile</a>
+                {% if user.role == 'employer' %}
+                    <a href="{% url 'job-create' %}">Post a Job</a>
+                    <a href="{% url 'employer-dashboard' %}">Dashboard</a>
+                {% else %}
+                    <a href="{% url 'my-applications' %}">My Applications</a>
+                {% endif %}
                 <form action="{% url 'logout' %}" method="post" style="display:inline; margin: 0;">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-secondary" style="padding: 0.4rem 1rem;">Logout</button>

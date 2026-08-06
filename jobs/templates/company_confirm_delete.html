@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Company Profile — Bloom Jobs{% endblock %}
+
+{% block content %}
+<div class="glass-card" style="max-width: 600px; margin: 2rem auto; padding: 2rem; text-align: center;">
+    <h2 style="color: #dc2626; margin-top: 0;">Delete Company Profile</h2>
+    
+    <div style="font-size: 3rem; margin: 1rem 0;">⚠️</div>
+    
+    <p style="font-size: 1.1rem; color: var(--text-dark); margin-bottom: 2rem;">
+        Are you sure you want to delete the company profile for <strong>{{ object.name }}</strong>?
+    </p>
+    
+    <div style="background: #fee2e2; border: 1px solid #fca5a5; padding: 1rem; border-radius: 8px; margin-bottom: 2rem; text-align: left;">
+        <h4 style="color: #991b1b; margin-top: 0; margin-bottom: 0.5rem;">Warning: This action cannot be undone.</h4>
+        <ul style="color: #7f1d1d; margin-bottom: 0; padding-left: 1.5rem;">
+            <li>Your company profile will be permanently removed.</li>
+            <li>All associated jobs may lose their company branding unless updated.</li>
+        </ul>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <div style="display: flex; gap: 1rem; justify-content: center;">
+            <a href="{% url 'employer-dashboard' %}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn" style="background: #dc2626; border-color: #dc2626;">Yes, Delete Company</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+
+{% block title %}AI Analysis Results{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="mb-4">
+        <a href="{% url 'resume-analysis-list' %}" class="text-decoration-none">&larr; Back to History</a>
+    </div>
+
+    <div class="row mb-5">
+        <div class="col-12">
+            <h1 class="fw-bold mb-3">AI Resume Analysis Results</h1>
+            <p class="text-muted">Analyzed on {{ analysis.timestamp|date:"F d, Y, h:i A" }}</p>
+        </div>
+    </div>
+
+    <!-- Scores -->
+    <div class="row mb-5 text-center">
+        <div class="col-md-6 mb-3">
+            <div class="card border-0 shadow-sm bg-primary text-white h-100 p-4 rounded-4">
+                <h3>Resume Score</h3>
+                <h1 class="display-3 fw-bold">{{ analysis.resume_score }}<span class="fs-4">/100</span></h1>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="card border-0 shadow-sm bg-dark text-white h-100 p-4 rounded-4">
+                <h3>ATS Compatibility</h3>
+                <h1 class="display-3 fw-bold">{{ analysis.ats_score }}<span class="fs-4">/100</span></h1>
+            </div>
+        </div>
+    </div>
+
+    <!-- Professional Summary Review -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+            <h4 class="card-title fw-bold mb-3 text-primary">Professional Summary Review</h4>
+            <p class="card-text fs-5">{{ analysis.summary_review }}</p>
+        </div>
+    </div>
+
+    <!-- Skills Analysis -->
+    <div class="row mb-4">
+        <div class="col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold text-success mb-3">Detected Skills</h5>
+                    <div class="d-flex flex-wrap gap-2">
+                        {% for skill in analysis.skills_detected %}
+                            <span class="badge bg-success bg-opacity-25 text-success rounded-pill px-3 py-2 fs-6">{{ skill }}</span>
+                        {% empty %}
+                            <span class="text-muted">No specific skills detected.</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold text-danger mb-3">Missing Skills (Recommended)</h5>
+                    <div class="d-flex flex-wrap gap-2">
+                        {% for skill in analysis.missing_skills %}
+                            <span class="badge bg-danger bg-opacity-25 text-danger rounded-pill px-3 py-2 fs-6">{{ skill }}</span>
+                        {% empty %}
+                            <span class="text-muted">Your skill profile looks complete for your level!</span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Job Match Section (Optional) -->
+    {% if analysis.job %}
+    <div class="card border-0 shadow-sm mb-4 border-start border-4 border-info">
+        <div class="card-body p-4">
+            <h4 class="fw-bold text-info mb-4">Job Match Analysis: {{ analysis.job.title }}</h4>
+            <div class="row align-items-center">
+                <div class="col-md-4 text-center border-end">
+                    <h1 class="display-4 fw-bold text-info">{{ analysis.match_percentage }}%</h1>
+                    <p class="text-muted mb-0">Match Score</p>
+                </div>
+                <div class="col-md-8 px-4">
+                    <h6 class="fw-bold text-success">Matching Requirements</h6>
+                    <p>{{ analysis.matching_skills|join:", " }}</p>
+                    <h6 class="fw-bold text-danger mt-3">Missing Requirements</h6>
+                    <p>{{ analysis.job_missing_skills|join:", " }}</p>
+                </div>
+            </div>
+            
+            <div class="mt-4 bg-light p-3 rounded">
+                <h6 class="fw-bold">Recommendations for this Application</h6>
+                <ul class="mb-0">
+                    {% for rec in analysis.job_recommendations %}
+                        <li>{{ rec }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Strengths & Weaknesses -->
+    <div class="row mb-4">
+        <div class="col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 pt-4 pb-0">
+                    <h5 class="fw-bold"><i class="bi bi-star-fill text-warning me-2"></i>Strengths</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        {% for item in analysis.strengths %}
+                            <li class="list-group-item bg-transparent border-0 pb-1 px-0"><i class="bi bi-check-circle-fill text-success me-2"></i>{{ item }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 pt-4 pb-0">
+                    <h5 class="fw-bold"><i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>Weaknesses</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        {% for item in analysis.weaknesses %}
+                            <li class="list-group-item bg-transparent border-0 pb-1 px-0"><i class="bi bi-x-circle-fill text-danger me-2"></i>{{ item }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actionable Improvements -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4 bg-primary bg-opacity-10 rounded">
+            <h4 class="fw-bold mb-3 text-primary"><i class="bi bi-lightning-charge-fill me-2"></i>Actionable Improvements</h4>
+            <ul class="mb-0 fs-5">
+                {% for item in analysis.actionable_improvements %}
+                    <li class="mb-2">{{ item }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <!-- Grammar & Formatting -->
+    <div class="row mb-5">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold text-secondary mb-3">Grammar & Writing</h6>
+                    <ul class="ps-3 mb-0 text-muted">
+                        {% for item in analysis.grammar_suggestions %}
+                            <li>{{ item }}</li>
+                        {% empty %}
+                            <li>No major grammar issues detected.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold text-secondary mb-3">Formatting Suggestions</h6>
+                    <ul class="ps-3 mb-0 text-muted">
+                        {% for item in analysis.formatting_suggestions %}
+                            <li>{{ item }}</li>
+                        {% empty %}
+                            <li>Formatting looks good!</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

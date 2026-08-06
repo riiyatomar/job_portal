@@ -1,0 +1,276 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Applicants for {{ job.title }} — Bloom Jobs{% endblock %}
+
+{% block content %}
+<div class="glass-card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <h1 style="margin: 0; margin-bottom: 0.5rem;">Applicants for {{ job.title }}</h1>
+            <a href="{% url 'employer-dashboard' %}" style="color: var(--text-light); text-decoration: none;">&larr; Back to Dashboard</a>
+        </div>
+        <div class="stat-card" style="padding: 1rem; display: flex; gap: 2rem; border: none; box-shadow: none; background: var(--primary-light);">
+            <div>
+                <div style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-medium);">Total Views</div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary-dark);">{{ job.views_count }}</div>
+            </div>
+            <div>
+                <div style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-medium);">Applications</div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary-dark);">{{ job.application_set.count }}</div>
+            </div>
+        </div>
+    </div>
+
+    {% if job.application_set.exists %}
+        <!-- Search and Filter Form -->
+        <div style="margin-bottom: 1.5rem; background: var(--glass-bg); padding: 1rem; border-radius: 8px; border: 1px solid var(--glass-border);">
+            <form method="get" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end; margin: 0;">
+                <div class="form-group" style="margin: 0; flex-grow: 1; min-width: 200px;">
+                    <label for="q" style="font-size: 0.85rem; color: var(--text-medium); margin-bottom: 0.25rem; display: block;">Search Applicant</label>
+                    <input type="text" name="q" id="q" value="{{ search_query }}" placeholder="Username..." style="width: 100%; padding: 0.5rem; border: 1px solid var(--glass-border); border-radius: 4px; outline: none;">
+                </div>
+                <div class="form-group" style="margin: 0; flex-grow: 1; min-width: 200px;">
+                    <label for="status" style="font-size: 0.85rem; color: var(--text-medium); margin-bottom: 0.25rem; display: block;">Filter by Status</label>
+                    <select name="status" id="status" style="width: 100%; padding: 0.5rem; border: 1px solid var(--glass-border); border-radius: 4px; outline: none; background: #fff;">
+                        <option value="">All Statuses</option>
+                        {% for choice in status_choices %}
+                            <option value="{{ choice.0 }}" {% if current_status == choice.0 %}selected{% endif %}>{{ choice.1 }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn" style="padding: 0.5rem 1rem;">Filter</button>
+                <a href="{% url 'job-applicants' job.pk %}" class="btn btn-secondary" style="padding: 0.5rem 1rem;">Clear</a>
+            </form>
+        </div>
+
+        {% if applications %}
+        <style>
+            .candidates-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+                gap: 1.5rem;
+                margin-top: 1rem;
+            }
+            .candidate-card {
+                background: var(--glass-bg, #ffffff);
+                border: 1px solid var(--glass-border, #e0e0e0);
+                border-radius: 12px;
+                padding: 1.5rem;
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+                transition: transform 0.2s, box-shadow 0.2s;
+            }
+            .candidate-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 12px rgba(0,0,0,0.1);
+            }
+            .candidate-header {
+                display: flex;
+                gap: 1rem;
+                align-items: center;
+            }
+            .candidate-photo {
+                width: 60px;
+                height: 60px;
+                border-radius: 50%;
+                background-color: var(--primary-light, #e0f2fe);
+                background-size: cover;
+                background-position: center;
+                flex-shrink: 0;
+            }
+            .candidate-info h3 {
+                margin: 0 0 0.25rem 0;
+                font-size: 1.2rem;
+                color: var(--text-dark, #1f2937);
+            }
+            .candidate-headline {
+                font-size: 0.9rem;
+                color: var(--text-medium, #4b5563);
+                margin: 0;
+            }
+            .candidate-meta {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.75rem;
+                font-size: 0.8rem;
+                color: var(--text-light, #6b7280);
+                margin-top: 0.5rem;
+            }
+            .candidate-meta span {
+                display: flex;
+                align-items: center;
+                gap: 0.25rem;
+            }
+            .candidate-body {
+                font-size: 0.85rem;
+                color: var(--text-medium, #4b5563);
+                flex-grow: 1;
+                display: flex;
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+            .candidate-section {
+                background: #f9fafb;
+                padding: 0.75rem;
+                border-radius: 8px;
+            }
+            .candidate-section strong {
+                display: block;
+                color: var(--text-dark, #1f2937);
+                margin-bottom: 0.25rem;
+            }
+            .candidate-actions {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+                margin-top: auto;
+                padding-top: 1rem;
+                border-top: 1px solid var(--glass-border, #e0e0e0);
+            }
+            .btn-action {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.8rem;
+                border-radius: 4px;
+                text-decoration: none;
+                text-align: center;
+                cursor: pointer;
+                border: 1px solid transparent;
+            }
+            .btn-view { background: var(--primary-color, #0ea5e9); color: white; flex-grow: 1; }
+            .btn-outline { border-color: var(--primary-color, #0ea5e9); color: var(--primary-color, #0ea5e9); background: transparent; }
+            .badge-sm { padding: 0.2rem 0.5rem; font-size: 0.75rem; border-radius: 99px; }
+            .completion-bar { height: 4px; background: #e5e7eb; border-radius: 2px; margin-top: 4px; overflow: hidden; }
+            .completion-fill { height: 100%; background: #10b981; }
+        </style>
+
+        <form id="bulk-action-form" method="post" action="{% url 'job-applicants' job.pk %}">
+            {% csrf_token %}
+            <div style="background: var(--glass-bg); padding: 1rem; border-radius: 8px; border: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
+                <div>
+                    <input type="checkbox" id="select-all" style="margin-right: 0.5rem; transform: scale(1.2);">
+                    <label for="select-all" style="font-weight: 500; font-size: 0.95rem;">Select All</label>
+                </div>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <select name="bulk_status" style="padding: 0.5rem; border: 1px solid var(--glass-border); border-radius: 4px; outline: none; background: #fff;">
+                        <option value="">-- Bulk Action --</option>
+                        {% for choice in status_choices %}
+                            <option value="{{ choice.0 }}">{{ choice.1 }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn" style="padding: 0.5rem 1rem;" onclick="return confirm('Are you sure you want to update the status for all selected candidates?');">Apply</button>
+                </div>
+            </div>
+
+        <div class="candidates-grid">
+            {% for app in applications %}
+            <div class="candidate-card" style="position: relative;">
+                <input type="checkbox" name="application_ids" value="{{ app.id }}" class="candidate-checkbox" style="position: absolute; top: 1rem; right: 1rem; transform: scale(1.3); z-index: 10;">
+                <div class="candidate-header">
+                    <div class="candidate-photo" style="{% if app.applicant.profile.profile_picture %}background-image: url('{{ app.applicant.profile.profile_picture.url }}');{% endif %}"></div>
+                    <div class="candidate-info" style="flex-grow: 1;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <h3>{{ app.applicant.first_name }} {{ app.applicant.last_name }} {% if not app.applicant.first_name %}{{ app.applicant.username }}{% endif %}</h3>
+                            {% if app.status == 'Applied' %}<span class="badge badge-applied badge-sm">{{ app.status }}</span>
+                            {% elif app.status == 'Under Review' %}<span class="badge badge-review badge-sm">{{ app.status }}</span>
+                            {% elif app.status == 'Shortlisted' %}<span class="badge badge-shortlisted badge-sm">{{ app.status }}</span>
+                            {% elif app.status == 'Interview Scheduled' %}<span class="badge badge-interview badge-sm">{{ app.status }}</span>
+                            {% elif app.status == 'Technical Round' %}<span class="badge badge-technical badge-sm">{{ app.status }}</span>
+                            {% elif app.status == 'HR Round' %}<span class="badge badge-hr badge-sm">{{ app.status }}</span>
+                            {% elif app.status == 'Offer Extended' %}<span class="badge badge-offer badge-sm">{{ app.status }}</span>
+                            {% elif app.status == 'Hired' %}<span class="badge badge-hired badge-sm">{{ app.status }}</span>
+                            {% elif app.status == 'Rejected' %}<span class="badge badge-rejected badge-sm">{{ app.status }}</span>
+                            {% elif app.status == 'Withdrawn' %}<span class="badge badge-withdrawn badge-sm">{{ app.status }}</span>
+                            {% else %}<span class="badge badge-sm">{{ app.status }}</span>
+                            {% endif %}
+                        </div>
+                        <p class="candidate-headline">{{ app.applicant.profile.headline|default:"No headline provided" }}</p>
+                        <div class="candidate-meta">
+                            {% if app.applicant.profile.location %}<span>📍 {{ app.applicant.profile.location }}</span>{% endif %}
+                            <span>📅 {{ app.date_applied|date:"M d, Y" }}</span>
+                            {% if app.resume or app.applicant.profile.resume %}<span style="color: #10b981;">📄 Resume Available</span>{% endif %}
+                        </div>
+                        <div>
+                            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; margin-top: 0.5rem; color: var(--text-light);">
+                                <span>Profile Completion</span>
+                                <span>{{ app.applicant.profile.get_completion_percentage }}%</span>
+                            </div>
+                            <div class="completion-bar">
+                                <div class="completion-fill" style="width: {{ app.applicant.profile.get_completion_percentage }}%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="candidate-body">
+                    <div class="candidate-section">
+                        <strong>Top Skills</strong>
+                        {{ app.applicant.profile.skills|truncatechars:100|default:"Not specified" }}
+                    </div>
+                    <div style="display: flex; gap: 0.75rem;">
+                        <div class="candidate-section" style="flex: 1;">
+                            <strong>Experience</strong>
+                            {{ app.applicant.profile.experience|truncatechars:60|default:"Not specified" }}
+                        </div>
+                        <div class="candidate-section" style="flex: 1;">
+                            <strong>Education</strong>
+                            {{ app.applicant.profile.education|truncatechars:60|default:"Not specified" }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="candidate-actions">
+                    <a href="{% url 'applicant-profile' app.id %}" class="btn-action btn-view">View Profile</a>
+                    
+                    {% if app.resume or app.applicant.profile.resume %}
+                        <a href="{% url 'download-resume' app.id %}" target="_blank" class="btn-action btn-outline" title="Download Resume">📥 PDF</a>
+                    {% endif %}
+
+                    <form method="post" style="display: flex; margin: 0; width: 100%; gap: 0.5rem; align-items: center;">
+                        {% csrf_token %}
+                        <input type="hidden" name="application_id" value="{{ app.id }}">
+                        <select name="status" style="padding: 0.35rem; border-radius: 4px; border: 1px solid var(--glass-border); flex-grow: 1; font-size: 0.8rem; background: #fff; outline: none;">
+                            {% for choice in status_choices %}
+                                <option value="{{ choice.0 }}" {% if app.status == choice.0 %}selected{% endif %}>{{ choice.1 }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="btn-action btn-outline" style="padding: 0.35rem 0.5rem;">Update</button>
+                    </form>
+                    
+                    <!-- Quick Schedule Interview form trigger (redirects to profile where full features are or changes status) -->
+                    <form method="post" style="margin: 0; width: 100%;">
+                        {% csrf_token %}
+                        <input type="hidden" name="application_id" value="{{ app.id }}">
+                        <input type="hidden" name="status" value="Interview Scheduled">
+                        <button type="submit" class="btn-action btn-outline" style="width: 100%;" {% if app.status == 'Interview Scheduled' %}disabled{% endif %}>📅 Schedule Interview</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        </form>
+        
+        <script>
+            document.getElementById('select-all').addEventListener('change', function() {
+                const checkboxes = document.querySelectorAll('.candidate-checkbox');
+                for (const checkbox of checkboxes) {
+                    checkbox.checked = this.checked;
+                }
+            });
+        </script>
+        {% else %}
+        <div class="empty-state">
+            <h3 style="margin: 0;">No results found.</h3>
+            <p>Try adjusting your search or filters.</p>
+        </div>
+        {% endif %}
+    {% else %}
+        <div class="empty-state">
+            <h3 style="margin: 0;">No applicants yet.</h3>
+            <p>Wait for candidates to discover this opportunity.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

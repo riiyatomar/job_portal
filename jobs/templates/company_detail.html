@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ company.name }} — Bloom Jobs{% endblock %}
+
+{% block content %}
+<div class="glass-card" style="padding: 0; overflow: hidden; margin-bottom: 2rem;">
+    <!-- Banner -->
+    <div style="height: 200px; width: 100%; background: linear-gradient(135deg, var(--primary-light), var(--accent-blue)); position: relative;">
+        {% if company.banner %}
+            <img src="{{ company.banner.url }}" alt="{{ company.name }} banner" style="width: 100%; height: 100%; object-fit: cover;">
+        {% endif %}
+    </div>
+
+    <!-- Company Info -->
+    <div style="padding: 2rem; display: flex; gap: 2rem; align-items: flex-end; margin-top: -60px; position: relative;">
+        <div style="flex-shrink: 0; width: 120px; height: 120px; border-radius: 12px; background: white; border: 4px solid var(--glass-border); overflow: hidden; box-shadow: var(--shadow-md);">
+            {% if company.logo %}
+                <img src="{{ company.logo.url }}" alt="{{ company.name }} logo" style="width: 100%; height: 100%; object-fit: cover;">
+            {% else %}
+                <div style="width: 100%; height: 100%; background: linear-gradient(135deg, var(--primary-light), var(--accent-blue)); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 3rem;">
+                    {{ company.name|make_list|first|upper }}
+                </div>
+            {% endif %}
+        </div>
+        
+        <div style="flex: 1; padding-bottom: 10px;">
+            <h1 style="margin: 0 0 0.5rem 0; font-size: 2.5rem; color: var(--text-dark);">{{ company.name }}</h1>
+            <div style="display: flex; gap: 1rem; color: var(--text-medium);">
+                {% if company.location %}
+                    <span>📍 {{ company.location }}</span>
+                {% endif %}
+                {% if company.website %}
+                    <span>🔗 <a href="{{ company.website }}" target="_blank" style="color: var(--accent-blue); text-decoration: none;">Website</a></span>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if user == company.owner %}
+            <div style="padding-bottom: 10px;">
+                <a href="{% url 'company-update' company.slug %}" class="btn btn-secondary">Edit Profile</a>
+            </div>
+        {% endif %}
+    </div>
+
+    <div style="padding: 0 2rem 2rem 2rem;">
+        <h3 style="margin-top: 1rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 0.5rem;">About Us</h3>
+        <p style="white-space: pre-wrap; line-height: 1.6; color: var(--text-dark);">{{ company.description }}</p>
+    </div>
+</div>
+
+<h2 style="margin-bottom: 1.5rem;">Open Jobs at {{ company.name }}</h2>
+
+{% if open_jobs %}
+    <div class="job-grid">
+        {% for job in open_jobs %}
+            <div class="glass-card job-card">
+                <h3>{{ job.title }}</h3>
+                <div class="location">📍 {{ job.location }}</div>
+                <div class="salary-badge">💰 ${{ job.salary }}</div>
+                <div style="margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                    <span class="badge" style="background: var(--glass-bg); color: var(--text-medium); font-weight: normal; border: 1px solid var(--glass-border);">💼 {{ job.get_job_type_display }}</span>
+                    <span class="badge" style="background: var(--glass-bg); color: var(--text-medium); font-weight: normal; border: 1px solid var(--glass-border);">🏠 {{ job.get_work_mode_display }}</span>
+                </div>
+                <div class="card-footer" style="margin-top: 1.5rem;">
+                    <a href="{% url 'job-detail' job.pk %}" class="btn" style="flex: 1; text-align: center;">View Details</a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="glass-card empty-state" style="padding: 3rem; text-align: center;">
+        <h3 style="margin: 0; color: var(--text-medium);">No open positions at this time.</h3>
+    </div>
+{% endif %}
+
+{% endblock %}
