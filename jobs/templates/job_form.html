@@ -3,7 +3,7 @@
 {% block content %}
 <div class="glass-card" style="max-width: 600px; margin: 0 auto;">
     <h2>{% if object %}Edit{% else %}Post a New{% endif %} Job</h2>
-    <form method="post">
+    <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         {{ form.as_p }}
         <div style="display: flex; gap: 1rem; margin-top: 1rem;">

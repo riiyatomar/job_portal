@@ -69,9 +69,15 @@
                         <a href="{% url 'job-detail' job.pk %}" class="btn btn-secondary">View</a>
                         <a href="{% url 'job-update' job.pk %}" class="btn btn-secondary">Edit</a>
                         {% if job.is_closed %}
-                            <a href="{% url 'job-toggle-status' job.pk 'reopen' %}" class="btn btn-secondary" style="color: var(--accent-blue) !important; border-color: var(--accent-blue);">Reopen</a>
+                            <form method="post" action="{% url 'job-toggle-status' job.pk 'reopen' %}" style="display: inline; margin: 0;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-secondary" style="color: var(--accent-blue) !important; border-color: var(--accent-blue);">Reopen</button>
+                            </form>
                         {% else %}
-                            <a href="{% url 'job-toggle-status' job.pk 'close' %}" class="btn btn-secondary" style="color: #f59e0b !important; border-color: #f59e0b;">Close</a>
+                            <form method="post" action="{% url 'job-toggle-status' job.pk 'close' %}" style="display: inline; margin: 0;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-secondary" style="color: #f59e0b !important; border-color: #f59e0b;">Close</button>
+                            </form>
                         {% endif %}
                         <a href="{% url 'job-delete' job.pk %}" class="btn btn-secondary" style="color: #ef476f !important; border-color: #ef476f;">Delete</a>
                     </div>

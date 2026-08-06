@@ -111,7 +111,7 @@ class RecruiterNote(models.Model):
     application = models.ForeignKey(Application, on_delete=models.CASCADE, related_name='recruiter_notes')
     title = models.CharField(max_length=200)
     note = models.TextField()
-    rating = models.IntegerField(choices=[(i, i) for i in range(1, 6)], default=0)
+    rating = models.IntegerField(choices=[(i, i) for i in range(0, 6)], default=0)
     recommendation = models.CharField(max_length=50, blank=True)
     strong_candidate = models.BooleanField(default=False)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)

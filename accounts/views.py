@@ -1,3 +1,4 @@
+import logging
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -10,6 +11,8 @@ from .forms import CustomUserCreationForm, ProfileForm, ResumeForm
 from .models import Profile, CustomUser, ResumeAnalysis
 from .ai_utils import analyze_resume
 from jobs.models import Job
+
+logger = logging.getLogger(__name__)
 
 def signup(request):
     if request.method == 'POST':
@@ -145,8 +148,8 @@ def analyze_resume_view(request):
         except ValueError as e:
             messages.error(request, str(e))
         except Exception as e:
-            messages.error(request, "An error occurred during AI processing. Please try again later.")
-            print(f"AI Error: {e}")
+            logger.exception(f"AI Analysis Error for user '{request.user.username}': {e}")
+            messages.error(request, f"AI analysis error: {str(e)}")
             
     referer = request.META.get('HTTP_REFERER')
     if referer:

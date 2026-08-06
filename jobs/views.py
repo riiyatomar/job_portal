@@ -1,4 +1,5 @@
 import os
+import mimetypes
 from django.core.files.base import ContentFile
 from django.shortcuts import redirect, get_object_or_404
 from django.http import FileResponse, Http404
@@ -158,8 +159,7 @@ class JobCreateView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         form.instance.posted_by = self.request.user
         try:
-            if hasattr(self.request.user, 'company'):
-                form.instance.company = self.request.user.company
+            form.instance.company = self.request.user.company
         except Company.DoesNotExist:
             pass
         return super().form_valid(form)
@@ -176,7 +176,7 @@ class JobUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 
     def form_valid(self, form):
         try:
-            if hasattr(self.request.user, 'company') and not form.instance.company:
+            if not form.instance.company:
                 form.instance.company = self.request.user.company
         except Company.DoesNotExist:
             pass
@@ -241,7 +241,11 @@ class CompanyCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
         # Only employers who don't already have a company can create one
         if self.request.user.role != 'employer':
             return False
-        return not hasattr(self.request.user, 'company')
+        try:
+            self.request.user.company
+            return False  # Company exists, deny creation
+        except Company.DoesNotExist:
+            return True  # No company yet, allow creation
 
     def form_valid(self, form):
         form.instance.owner = self.request.user
@@ -340,7 +344,7 @@ class JobApplicantsView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
         
         if bulk_status and application_ids:
             apps = Application.objects.filter(id__in=application_ids, job=job)
-            from .models import ApplicationStatusHistory
+
             count = 0
             for app in apps:
                 if app.status != bulk_status:
@@ -368,7 +372,7 @@ class JobApplicantsView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
                 app.save(update_fields=['status'])
                 
                 # Create history entry
-                from .models import ApplicationStatusHistory
+
                 ApplicationStatusHistory.objects.create(
                     application=app,
                     status=new_status,
@@ -394,7 +398,7 @@ def withdraw_application(request, pk):
         app.status = 'Withdrawn'
         app.save(update_fields=['status'])
         
-        from .models import ApplicationStatusHistory
+
         ApplicationStatusHistory.objects.create(
             application=app,
             status='Withdrawn',
@@ -535,6 +539,21 @@ def download_resume(request, pk):
     try:
         if not resume_file.storage.exists(resume_file.name):
             raise Http404("Resume file is missing from storage.")
-        return FileResponse(resume_file.open('rb'), content_type='application/pdf')
+
+        # Detect MIME type dynamically
+        filename = os.path.basename(resume_file.name)
+        content_type, _ = mimetypes.guess_type(filename)
+        if not content_type:
+            content_type = 'application/octet-stream'
+
+        response = FileResponse(resume_file.open('rb'), content_type=content_type)
+
+        # PDFs open inline in browser; everything else downloads
+        if content_type == 'application/pdf':
+            response['Content-Disposition'] = f'inline; filename="{filename}"'
+        else:
+            response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+        return response
     except (ValueError, OSError, FileNotFoundError):
         raise Http404("Resume file is missing or corrupted.")
