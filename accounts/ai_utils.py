@@ -77,7 +77,7 @@ def analyze_resume(file_path, job_description=None):
     if not api_key:
         raise ValueError("GOOGLE_API_KEY is not set in your environment. Please configure it in the .env file.")
 
-    model_name = os.environ.get('GEMINI_MODEL', 'gemini-2.0-flash')
+    model_name = os.environ.get('GEMINI_MODEL', 'gemini-3.5-flash')
     
     logger.info(f"Starting resume analysis: file='{os.path.basename(file_path)}', model='{model_name}'")
 
